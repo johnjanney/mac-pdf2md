@@ -41,11 +41,11 @@ Rules of thumb:
 ## [Unreleased]
 
 ### Added
-- Output files can now be named after the **document's title** (embedded PDF
-  metadata title, else the first detected heading) instead of the PDF's
-  filename. Controlled by a new "Name files by the document's title" option
-  (on by default); falls back to the filename when no title is found. Titles
-  are sanitized and length-capped for safe filenames. Unit tests added.
+- Output files can now be named after the **document's title** (the first
+  on-page heading, falling back to the embedded PDF metadata title) instead of
+  the PDF's filename. Controlled by a new "Name files by the document's title"
+  option (on by default); falls back to the filename when no title is found.
+  Titles are sanitized and length-capped for safe filenames. Unit tests added.
 - Initial project documentation: `PROJECTBRIEF.md`, `README.md`,
   `INSTRUCTIONS.md`, `CHANGELOG.md`, and `OPENQUESTIONS.md`.
 - Defined scope, requirements, architecture, milestones, and the Semantic

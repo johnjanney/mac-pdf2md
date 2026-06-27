@@ -59,13 +59,19 @@ struct PDFKitConverter: PDFConverter {
     // MARK: - Title detection
 
     /// Best-effort title for naming the output file.
-    /// Preference: clean embedded metadata title → first on-page heading → nil
-    /// (caller falls back to the PDF's filename).
+    /// Preference: first on-page heading (the visible title) → clean embedded
+    /// metadata title → nil (caller falls back to the PDF's filename).
+    ///
+    /// The heading is preferred because embedded metadata titles are frequently
+    /// production artifacts (e.g. proof IDs) rather than the real title.
     static func detectTitle(metadata: String?, pages: [[TextLine]], bodySize: Double) -> String? {
+        if let heading = firstHeading(in: pages, bodySize: bodySize) {
+            return heading
+        }
         if let meta = cleanTitle(metadata), !isLikelyFilename(meta) {
             return meta
         }
-        return firstHeading(in: pages, bodySize: bodySize)
+        return nil
     }
 
     /// The first heading-sized line on the first non-empty page.

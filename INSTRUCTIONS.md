@@ -72,8 +72,8 @@ stop the rest of the batch.
 ## How output files are named
 
 - By default (the **"Name files by the document's title"** option), each `.md`
-  is named after the document's title — taken from the PDF's embedded title, or
-  the first heading on the page if there's no usable embedded title.
+  is named after the document's title — taken from the **first heading** on the
+  page, falling back to the PDF's embedded title only if no heading is found.
 - If no title can be detected, the app falls back to the PDF's filename
   (`report.pdf` → `report.md`).
 - Turn the option off to always use the PDF's filename instead.

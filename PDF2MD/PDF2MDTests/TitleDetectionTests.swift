@@ -8,25 +8,27 @@ final class TitleDetectionTests: XCTestCase {
         TextLine(text: text, fontSize: size, isBold: false, isItalic: false, isBullet: false)
     }
 
-    func testPrefersCleanMetadataTitle() {
+    func testPrefersFirstHeadingOverMetadata() {
+        // The on-page heading wins even when a clean metadata title exists.
         let pages = [[line("On-page Heading", size: 24)]]
-        let title = PDFKitConverter.detectTitle(metadata: "Annual Report 2025", pages: pages, bodySize: body)
-        XCTAssertEqual(title, "Annual Report 2025")
+        let title = PDFKitConverter.detectTitle(metadata: "Embedded Metadata Title", pages: pages, bodySize: body)
+        XCTAssertEqual(title, "On-page Heading")
     }
 
-    func testFallsBackToHeadingWhenMetadataLooksLikeFilename() {
+    func testUsesHeadingWhenMetadataLooksLikeFilename() {
         let pages = [[line("Quarterly Results", size: 20), line("body text", size: 12)]]
         let title = PDFKitConverter.detectTitle(metadata: "Microsoft Word - q3.docx", pages: pages, bodySize: body)
         XCTAssertEqual(title, "Quarterly Results")
     }
 
-    func testFallsBackToHeadingWhenMetadataMissing() {
-        let pages = [[line("My Document Title", size: 18), line("intro", size: 12)]]
-        let title = PDFKitConverter.detectTitle(metadata: nil, pages: pages, bodySize: body)
-        XCTAssertEqual(title, "My Document Title")
+    func testFallsBackToMetadataWhenNoHeading() {
+        // No heading-sized line on the page → fall back to a clean metadata title.
+        let pages = [[line("just body text", size: 12)]]
+        let title = PDFKitConverter.detectTitle(metadata: "Embedded Metadata Title", pages: pages, bodySize: body)
+        XCTAssertEqual(title, "Embedded Metadata Title")
     }
 
-    func testReturnsNilWhenNothingUsable() {
+    func testReturnsNilWhenNoHeadingAndNoUsableMetadata() {
         let pages = [[line("just body text", size: 12)]]
         let title = PDFKitConverter.detectTitle(metadata: "  ", pages: pages, bodySize: body)
         XCTAssertNil(title)
