@@ -48,6 +48,26 @@ open PDF2MD.xcodeproj
 `project.yml` is the canonical source of truth for project structure and build
 settings.
 
+## App icon
+
+A helper script generates the full macOS icon set (all 10 sizes +
+`Contents.json`) using only built-in Apple frameworks — no installs. Run it
+from the repo root:
+
+```sh
+# Draw the built-in PDF→MD icon:
+swift PDF2MD/Tools/GenerateAppIcon.swift
+
+# …or slice your own square 1024×1024 PNG instead:
+swift PDF2MD/Tools/GenerateAppIcon.swift /path/to/my-icon-1024.png
+```
+
+It writes into `PDF2MD/PDF2MD/Assets.xcassets/AppIcon.appiconset`. Rebuild in
+Xcode afterward (Clean Build Folder, ⇧⌘K, if the old icon is cached).
+
+You can also set the icon by hand in Xcode: open
+`Assets.xcassets → AppIcon` and drag images into the slots.
+
 ## Project layout
 
 ```
