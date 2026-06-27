@@ -131,12 +131,28 @@ final class ConversionViewModel: ObservableObject {
 
     // MARK: - Finder integration
 
+    /// Reveal a converted file in Finder. The file lives inside the user-granted
+    /// output folder, so we briefly re-acquire that folder's security scope.
     func reveal(_ url: URL) {
-        NSWorkspace.shared.activateFileViewerSelecting([url])
+        withOutputAccess {
+            NSWorkspace.shared.activateFileViewerSelecting([url])
+        }
     }
 
+    /// Open the output folder in Finder, re-acquiring its security scope first.
     func openOutputFolder() {
         guard let folder = outputFolder else { return }
-        NSWorkspace.shared.open(folder)
+        withOutputAccess {
+            NSWorkspace.shared.open(folder)
+        }
+    }
+
+    /// Run `body` while holding security-scoped access to the output folder
+    /// (required for a sandboxed app to hand user-selected locations to Finder).
+    private func withOutputAccess(_ body: () -> Void) {
+        let folder = outputFolder
+        let scoped = folder?.startAccessingSecurityScopedResource() ?? false
+        defer { if scoped { folder?.stopAccessingSecurityScopedResource() } }
+        body()
     }
 }
