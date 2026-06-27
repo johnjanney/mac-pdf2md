@@ -81,8 +81,12 @@ struct LLMClient: Sendable {
             req.httpBody = try JSONSerialization.data(withJSONObject: body)
             return req
 
-        case .openai:
-            var req = URLRequest(url: URL(string: "https://api.openai.com/v1/chat/completions")!)
+        case .openai, .deepseek:
+            // DeepSeek's API is OpenAI-compatible — same request/response shape.
+            let endpoint = provider == .deepseek
+                ? "https://api.deepseek.com/v1/chat/completions"
+                : "https://api.openai.com/v1/chat/completions"
+            var req = URLRequest(url: URL(string: endpoint)!)
             req.httpMethod = "POST"
             req.setValue("application/json", forHTTPHeaderField: "Content-Type")
             req.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
@@ -150,7 +154,7 @@ struct LLMClient: Sendable {
                 .joined()
             return text.isEmpty ? nil : text
 
-        case .openai:
+        case .openai, .deepseek:
             // { "choices": [ { "message": { "content": "..." } } ] }
             let choices = json["choices"] as? [[String: Any]] ?? []
             return (choices.first?["message"] as? [String: Any])?["content"] as? String
@@ -207,7 +211,7 @@ struct LLMClient: Sendable {
             }
         case .anthropic:
             if let reason = json["stop_reason"] as? String { return "stop reason: \(reason)" }
-        case .openai:
+        case .openai, .deepseek:
             if let choices = json["choices"] as? [[String: Any]],
                let reason = choices.first?["finish_reason"] as? String {
                 return "finish reason: \(reason)"

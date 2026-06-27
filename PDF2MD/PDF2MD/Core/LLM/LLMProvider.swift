@@ -5,6 +5,7 @@ enum LLMProvider: String, CaseIterable, Identifiable, Sendable {
     case anthropic
     case openai
     case google
+    case deepseek
 
     var id: String { rawValue }
 
@@ -13,6 +14,7 @@ enum LLMProvider: String, CaseIterable, Identifiable, Sendable {
         case .anthropic: return "Anthropic (Claude)"
         case .openai: return "OpenAI (ChatGPT)"
         case .google: return "Google (Gemini)"
+        case .deepseek: return "DeepSeek"
         }
     }
 
@@ -23,6 +25,7 @@ enum LLMProvider: String, CaseIterable, Identifiable, Sendable {
         case .anthropic: return "claude-opus-4-8"
         case .openai: return "gpt-4o"
         case .google: return "gemini-2.5-flash"
+        case .deepseek: return "deepseek-chat"
         }
     }
 
@@ -35,6 +38,16 @@ enum LLMProvider: String, CaseIterable, Identifiable, Sendable {
         case .anthropic: return "https://console.anthropic.com/settings/keys"
         case .openai: return "https://platform.openai.com/api-keys"
         case .google: return "https://aistudio.google.com/apikey"
+        case .deepseek: return "https://platform.deepseek.com/api_keys"
+        }
+    }
+
+    /// Whether the provider's default model accepts image input. The AI engine
+    /// is vision-based, so a text-only provider will reject page images.
+    var supportsVision: Bool {
+        switch self {
+        case .anthropic, .openai, .google: return true
+        case .deepseek: return false
         }
     }
 }

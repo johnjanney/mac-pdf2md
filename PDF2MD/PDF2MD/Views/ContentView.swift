@@ -164,6 +164,15 @@ struct ContentView: View {
                     }
                     .disabled(model.isConverting)
 
+                    if !settings.provider.supportsVision {
+                        Label("\(settings.provider.displayName)'s default model is text-only and "
+                              + "can't read page images, so conversions will likely fail. Use Claude, "
+                              + "OpenAI, or Gemini, or set a vision-capable model in Settings.",
+                              systemImage: "eye.slash")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    }
+
                     if settings.selectedProviderHasKey {
                         Text("Pages are sent to \(settings.provider.displayName) "
                              + "(model: \(settings.model(for: settings.provider))).")

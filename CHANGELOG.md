@@ -45,8 +45,11 @@ Rules of thumb:
   headings, tables, and charts. Each PDF page is rendered to an image and sent
   to a vision model for transcription. Choose between the **Local** engine
   (fast, offline, free) and the **AI** engine in the main window.
-  - Providers: **Anthropic (Claude)**, **OpenAI (ChatGPT)**, and
-    **Google (Gemini)**, selectable in a new **Settings** window.
+  - Providers: **Anthropic (Claude)**, **OpenAI (ChatGPT)**,
+    **Google (Gemini)**, and **DeepSeek**, selectable in a new **Settings**
+    window. (DeepSeek's current models are text-only and can't read page
+    images, so the app warns when it's selected; included for when DeepSeek
+    ships a vision model on its OpenAI-compatible API.)
   - API keys are stored in the **macOS Keychain**; model IDs are editable per
     provider so the app survives provider model changes.
   - Requires a paid API key and network access; page images are sent to the
