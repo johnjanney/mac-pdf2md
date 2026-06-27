@@ -43,8 +43,15 @@ Rules of thumb:
 ### Added
 - Initial project documentation: `PROJECTBRIEF.md`, `README.md`,
   `INSTRUCTIONS.md`, `CHANGELOG.md`, and `OPENQUESTIONS.md`.
-- Defined scope, requirements, recommended architecture, milestones, and the
-  Semantic Versioning policy for the project.
+- Defined scope, requirements, architecture, milestones, and the Semantic
+  Versioning policy for the project.
+- `LICENSE` — project licensed under the MIT License.
+
+### Changed
+- Resolved key design decisions: conversion engine is **Swift + PDFKit**
+  (first-party, no third-party engine license); output collisions use a
+  numeric-suffix default; project license is **MIT**. Remaining items in
+  `OPENQUESTIONS.md` now carry working defaults.
 
 > _No application code yet — the project is in the brief/planning phase._
 

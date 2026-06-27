@@ -63,5 +63,4 @@ and [`CHANGELOG.md`](./CHANGELOG.md).
 
 ## License
 
-To be determined — see [`OPENQUESTIONS.md`](./OPENQUESTIONS.md). A `LICENSE`
-file will be added before the first release.
+Released under the [MIT License](./LICENSE).

@@ -110,11 +110,11 @@ undecided items live in [`OPENQUESTIONS.md`](./OPENQUESTIONS.md).
 
 ---
 
-## 6. Recommended Technical Approach
+## 6. Technical Approach
 
-> The conversion *engine* is the most consequential technical decision. A
-> recommendation is made below; alternatives and the final call are tracked in
-> [`OPENQUESTIONS.md`](./OPENQUESTIONS.md).
+> Engine and licensing decisions are **resolved** (2026-06-27). See
+> [`OPENQUESTIONS.md`](./OPENQUESTIONS.md) for the record and the remaining
+> defaults.
 
 ### 6.1 UI layer — **SwiftUI (native macOS app)**
 
@@ -124,31 +124,28 @@ undecided items live in [`OPENQUESTIONS.md`](./OPENQUESTIONS.md).
   no runtime to bundle for the UI, easy access to native file/folder pickers
   (`NSOpenPanel` / `.fileImporter`) and Finder integration.
 
-### 6.2 Conversion engine — two candidate strategies
+### 6.2 Conversion engine — **Swift + PDFKit (decided)**
 
-**Option A (recommended for fidelity): bundle a Python conversion engine.**
+The conversion engine is **Apple's PDFKit**, used directly from Swift. No
+third-party conversion library is bundled.
 
-- Use a mature Python library such as **`pymupdf4llm`** (PyMuPDF-based,
-  Markdown-oriented, good structure/table handling) invoked as a helper.
-- The Swift app ships an embedded Python runtime or a self-contained helper
-  binary (e.g. built with PyInstaller) and calls it as a subprocess.
-- **Pro:** Best Markdown fidelity (headings, tables, lists) with low effort.
-- **Con:** Larger bundle; must verify the library's license is compatible with
-  distribution (PyMuPDF is AGPL — **this must be checked**, see Open Questions).
+- Use **PDFKit** to extract text and per-character layout/attributes, then apply
+  heuristics to reconstruct Markdown structure (headings via font-size
+  clustering, lists via bullet/indent detection, emphasis via font traits,
+  tables via column/whitespace analysis).
+- **Why chosen:** single language, no bundled runtime, smallest footprint, and —
+  importantly — **clean licensing**: PDFKit is a first-party Apple framework, so
+  there is no third-party engine license to clear (this is what resolves the
+  earlier AGPL concern entirely).
+- **Trade-off accepted:** more conversion logic to write ourselves, and table
+  fidelity is weaker than a dedicated library. We treat heading/paragraph/list
+  fidelity as the priority for v1.0 and table support as best-effort (FR-10 is
+  "Should", not "Must").
 
-**Option B (recommended for a pure-native, license-clean build): Swift + PDFKit.**
-
-- Use Apple's **PDFKit** to extract text and layout, then apply heuristics to
-  reconstruct Markdown structure (headings via font-size clustering, lists via
-  bullet/indent detection, etc.).
-- **Pro:** Single language, no bundled runtime, smallest footprint, clean
-  licensing.
-- **Con:** More conversion logic to write; table fidelity is weaker.
-
-**Decision needed before coding the engine.** The UI, file handling, batching,
-and output logic are identical regardless of engine choice, so UI scaffolding
-can proceed in parallel. Define a `PDFConverter` protocol/interface so the
-engine is swappable.
+Define a `PDFConverter` protocol so the engine remains swappable if a stronger
+approach is ever needed; `PDFKitConverter` is the v1.0 implementation. The UI,
+file handling, batching, and output logic are independent of the engine and can
+be built in parallel.
 
 ### 6.3 Suggested architecture
 
@@ -161,12 +158,12 @@ PDF2MD.app
 │   └── ResultsView           // per-file success/failure summary
 ├── Core
 │   ├── PDFConverter (protocol)        // convert(input:) -> Markdown
-│   ├── EngineXConverter (impl)        // PDFKit-based OR Python-helper-based
+│   ├── PDFKitConverter (impl)         // PDFKit text/layout -> Markdown heuristics
 │   ├── BatchRunner                    // queues files, runs off main thread
 │   ├── OutputWriter                   // naming, collision handling, writing .md
 │   └── FileScanner                    // expand folders -> [PDF URLs]
 └── Resources
-    └── (bundled helper binary, if Option A)
+    └── (app icon, assets — no bundled engine needed)
 ```
 
 ### 6.4 Key implementation notes
@@ -259,7 +256,16 @@ Conventions:
 
 ## 10. Risks and Open Items
 
-The primary open decisions (conversion engine choice, library licensing, minimum
-macOS version, sandboxing/notarization, OCR scope, and overwrite defaults) are
-tracked in [`OPENQUESTIONS.md`](./OPENQUESTIONS.md) and must be resolved at or
-before the relevant milestone.
+**Resolved (2026-06-27):** conversion engine (PDFKit), engine licensing (none —
+first-party framework), overwrite default (numeric suffix), and project license
+(MIT).
+
+**Remaining**, all with working defaults that do not block starting M1 —
+minimum macOS version (default 14), sandboxing/notarization (deferred to M5),
+OCR scope (excluded from v1.0), recursive folder scanning (default off), and
+app name/bundle id (PDF2MD / `com.johnjanney.pdf2md`) — are tracked in
+[`OPENQUESTIONS.md`](./OPENQUESTIONS.md) and confirmed at the relevant milestone.
+
+The main residual *technical* risk is **table fidelity** from PDFKit's
+heuristic-based reconstruction; mitigated by treating tables as best-effort
+(FR-10) and keeping the engine swappable behind the `PDFConverter` protocol.
