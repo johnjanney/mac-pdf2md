@@ -34,10 +34,34 @@ final class TitleDetectionTests: XCTestCase {
         XCTAssertNil(title)
     }
 
-    func testIgnoresOverlongHeadingAsTitle() {
-        let longHeading = String(repeating: "word ", count: 40) // > 120 chars
-        let pages = [[line(longHeading, size: 24)]]
-        XCTAssertNil(PDFKitConverter.firstHeading(in: pages, bodySize: body))
+    func testJoinsAdjacentSameSizeHeadingLines() {
+        // A title split across lines at the same font size is captured whole.
+        let pages = [[
+            line("Communicating Corporate Social", size: 18),
+            line("Responsibility in a Crisis", size: 18),
+            line("by Jane Doe", size: 12),
+            line("Abstract body text", size: 12),
+        ]]
+        let title = PDFKitConverter.firstHeading(in: pages, bodySize: body)
+        XCTAssertEqual(title, "Communicating Corporate Social Responsibility in a Crisis")
+    }
+
+    func testStopsAtSmallerFontAfterHeading() {
+        let pages = [[
+            line("Main Title", size: 20),
+            line("a subtitle in smaller text", size: 13),
+            line("Not part of the title", size: 20),
+        ]]
+        XCTAssertEqual(PDFKitConverter.firstHeading(in: pages, bodySize: body), "Main Title")
+    }
+
+    func testStopsAtBlankLineAfterHeading() {
+        let pages = [[
+            line("First Line", size: 18),
+            line("", size: 0),
+            line("Second Block", size: 18),
+        ]]
+        XCTAssertEqual(PDFKitConverter.firstHeading(in: pages, bodySize: body), "First Line")
     }
 
     func testCleanTitleCollapsesWhitespace() {

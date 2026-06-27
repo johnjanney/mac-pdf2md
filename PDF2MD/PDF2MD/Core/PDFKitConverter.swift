@@ -74,18 +74,37 @@ struct PDFKitConverter: PDFConverter {
         return nil
     }
 
-    /// The first heading-sized line on the first non-empty page.
+    /// The first heading on the first non-empty page, joined with any lines that
+    /// immediately follow it at the same (heading) font size. This captures
+    /// multi-line titles that are split across line breaks.
     static func firstHeading(in pages: [[TextLine]], bodySize: Double) -> String? {
         guard bodySize > 0, let page = pages.first(where: { !$0.isEmpty }) else { return nil }
+
+        var parts: [String] = []
+        var headingSize: Int?
+
         for line in page {
-            guard line.fontSize > 0 else { continue }
             let text = line.text.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !text.isEmpty else { continue }
-            if line.fontSize / bodySize >= 1.25 && text.count <= 120 {
-                return cleanTitle(text)
+
+            if headingSize == nil {
+                // Find the first heading-sized line.
+                guard line.fontSize > 0, !text.isEmpty,
+                      line.fontSize / bodySize >= 1.25 else { continue }
+                headingSize = Int(line.fontSize.rounded())
+                parts.append(text)
+            } else {
+                // Keep adjacent same-size lines (the rest of the title); stop at
+                // the first blank line or a line of a different size.
+                guard !text.isEmpty, line.fontSize > 0,
+                      Int(line.fontSize.rounded()) == headingSize else { break }
+                parts.append(text)
             }
+
+            // Safety: a real title won't run on forever; stop before body text.
+            if parts.joined(separator: " ").count > 200 { break }
         }
-        return nil
+
+        return cleanTitle(parts.joined(separator: " "))
     }
 
     /// Collapse whitespace/newlines and trim; return nil if empty.
