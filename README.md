@@ -41,6 +41,22 @@ tracked in [`OPENQUESTIONS.md`](./OPENQUESTIONS.md).
 > Not yet available — there is no build to install. Installation instructions
 > will be added here once the first release is published.
 
+## Build It
+Build the standalone app
+1. In Xcode, make sure the destination at the top says My Mac (not a simulator).
+2. Menu bar: Product → Archive. Wait for it to build (Archive always uses the optimized Release build). A window called Organizer opens with your archive listed.
+3. Click Distribute App (button on the right).
+4. Choose Custom → Next.
+5. Choose Copy App → Next. (This exports the app as-is, signed to run on your Mac — no Apple Developer account or notarization needed.)
+6. Pick a location to save it (e.g., Desktop) → Export.
+You'll get a folder containing PDF2MD.app.
+
+Install it
+* Drag PDF2MD.app into your Applications folder.
+* Launch it from Launchpad or Spotlight (⌘Space → "PDF2MD").
+* First launch only: if macOS says it's from an unidentified developer, right-click the app → Open → Open. After that it opens normally by double-click.
+That's it — it's now a normal Mac app, no Xcode required to run it.
+
 ## Usage
 
 See [`INSTRUCTIONS.md`](./INSTRUCTIONS.md) for how to use the app once it is
