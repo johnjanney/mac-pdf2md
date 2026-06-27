@@ -34,7 +34,7 @@ actor BatchEngine {
              converter: PDFConverter,
              writer: OutputWriter,
              useTitleForName: Bool,
-             progress: AsyncStream<ConversionProgress>.Continuation) -> [ConversionOutcome] {
+             progress: AsyncStream<ConversionProgress>.Continuation) async -> [ConversionOutcome] {
         var outcomes: [ConversionOutcome] = []
         let total = urls.count
 
