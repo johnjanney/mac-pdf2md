@@ -6,9 +6,27 @@ import UniformTypeIdentifiers
 struct ContentView: View {
     @StateObject private var model = ConversionViewModel()
 
-    @State private var showingPDFImporter = false
-    @State private var showingFolderImporter = false
-    @State private var showingOutputImporter = false
+    /// What the single file importer is currently selecting.
+    private enum ImportMode {
+        case pdfs, folder, output
+
+        var contentTypes: [UTType] {
+            switch self {
+            case .pdfs: return [.pdf]
+            case .folder, .output: return [.folder]
+            }
+        }
+
+        var allowsMultiple: Bool {
+            switch self {
+            case .pdfs, .folder: return true
+            case .output: return false
+            }
+        }
+    }
+
+    @State private var showingImporter = false
+    @State private var importMode: ImportMode = .pdfs
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -32,15 +50,23 @@ struct ContentView: View {
         }
         .padding(20)
         .frame(minWidth: 580, minHeight: 540)
-        .fileImporter(isPresented: $showingPDFImporter,
-                      allowedContentTypes: [.pdf],
-                      allowsMultipleSelection: true) { model.addInputs(from: $0) }
-        .fileImporter(isPresented: $showingFolderImporter,
-                      allowedContentTypes: [.folder],
-                      allowsMultipleSelection: true) { model.addInputs(from: $0) }
-        .fileImporter(isPresented: $showingOutputImporter,
-                      allowedContentTypes: [.folder],
-                      allowsMultipleSelection: false) { model.setOutputFolder(from: $0) }
+        // A single importer (SwiftUI only honors one .fileImporter per view);
+        // `importMode` selects what it picks and where the result is routed.
+        .fileImporter(isPresented: $showingImporter,
+                      allowedContentTypes: importMode.contentTypes,
+                      allowsMultipleSelection: importMode.allowsMultiple) { result in
+            switch importMode {
+            case .output:
+                model.setOutputFolder(from: result)
+            case .pdfs, .folder:
+                model.addInputs(from: result)
+            }
+        }
+    }
+
+    private func present(_ mode: ImportMode) {
+        importMode = mode
+        showingImporter = true
     }
 
     // MARK: - Sections
@@ -58,8 +84,8 @@ struct ContentView: View {
         GroupBox("1 · Choose PDFs") {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Button("Choose PDFs…") { showingPDFImporter = true }
-                    Button("Choose Folder…") { showingFolderImporter = true }
+                    Button("Choose PDFs…") { present(.pdfs) }
+                    Button("Choose Folder…") { present(.folder) }
                     Spacer()
                     if !model.inputURLs.isEmpty {
                         Button("Clear", role: .destructive) { model.clearInputs() }
@@ -78,7 +104,7 @@ struct ContentView: View {
     private var outputSection: some View {
         GroupBox("2 · Choose output folder") {
             VStack(alignment: .leading, spacing: 10) {
-                Button("Choose Output Folder…") { showingOutputImporter = true }
+                Button("Choose Output Folder…") { present(.output) }
                 Text(model.outputSummary)
                     .font(.callout)
                     .foregroundStyle(model.outputFolder == nil ? .secondary : .primary)
