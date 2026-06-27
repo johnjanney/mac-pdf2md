@@ -102,10 +102,11 @@ struct LLMClient: Sendable {
             return req
 
         case .google:
-            let urlString = "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent?key=\(apiKey)"
+            let urlString = "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent"
             var req = URLRequest(url: URL(string: urlString)!)
             req.httpMethod = "POST"
             req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            req.setValue(apiKey, forHTTPHeaderField: "x-goog-api-key")
             let body: [String: Any] = [
                 "system_instruction": ["parts": [["text": Self.prompt]]],
                 "contents": [[
