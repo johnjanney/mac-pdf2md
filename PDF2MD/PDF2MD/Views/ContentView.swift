@@ -119,6 +119,7 @@ struct ContentView: View {
     private var optionsSection: some View {
         GroupBox("Options") {
             VStack(alignment: .leading, spacing: 6) {
+                Toggle("Name files by the document's title", isOn: $model.nameByTitle)
                 Toggle("Include PDFs in subfolders", isOn: $model.includeSubfolders)
                 Toggle("Insert a divider between pages", isOn: $model.insertPageSeparators)
             }

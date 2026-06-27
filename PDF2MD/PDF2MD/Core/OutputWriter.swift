@@ -59,12 +59,19 @@ final class OutputWriter: @unchecked Sendable {
         return candidate(name)
     }
 
-    /// Strip path separators and trim so a base name is a safe single filename.
+    /// Strip path separators, collapse newlines, cap length, and trim so a base
+    /// name (which may come from a document title) is a safe single filename.
     private func sanitize(_ name: String) -> String {
-        let cleaned = name
+        var cleaned = name
             .replacingOccurrences(of: "/", with: "-")
             .replacingOccurrences(of: ":", with: "-")
+            .replacingOccurrences(of: "\n", with: " ")
+            .replacingOccurrences(of: "\r", with: " ")
             .trimmingCharacters(in: .whitespacesAndNewlines)
+        // Keep filenames reasonable even if a heading was mistaken for a title.
+        if cleaned.count > 80 {
+            cleaned = String(cleaned.prefix(80)).trimmingCharacters(in: .whitespaces)
+        }
         return cleaned.isEmpty ? "Untitled" : cleaned
     }
 }

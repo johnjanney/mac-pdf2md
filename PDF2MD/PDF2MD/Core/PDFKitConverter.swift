@@ -49,7 +49,56 @@ struct PDFKitConverter: PDFConverter {
         guard !markdown.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw ConversionError.noTextFound(url)
         }
-        return MarkdownDocument(markdown: markdown, pageCount: document.pageCount)
+
+        let metadataTitle = document.documentAttributes?[PDFDocumentAttribute.titleAttribute] as? String
+        let title = Self.detectTitle(metadata: metadataTitle, pages: pages, bodySize: bodySize)
+
+        return MarkdownDocument(markdown: markdown, pageCount: document.pageCount, title: title)
+    }
+
+    // MARK: - Title detection
+
+    /// Best-effort title for naming the output file.
+    /// Preference: clean embedded metadata title → first on-page heading → nil
+    /// (caller falls back to the PDF's filename).
+    static func detectTitle(metadata: String?, pages: [[TextLine]], bodySize: Double) -> String? {
+        if let meta = cleanTitle(metadata), !isLikelyFilename(meta) {
+            return meta
+        }
+        return firstHeading(in: pages, bodySize: bodySize)
+    }
+
+    /// The first heading-sized line on the first non-empty page.
+    static func firstHeading(in pages: [[TextLine]], bodySize: Double) -> String? {
+        guard bodySize > 0, let page = pages.first(where: { !$0.isEmpty }) else { return nil }
+        for line in page {
+            guard line.fontSize > 0 else { continue }
+            let text = line.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !text.isEmpty else { continue }
+            if line.fontSize / bodySize >= 1.25 && text.count <= 120 {
+                return cleanTitle(text)
+            }
+        }
+        return nil
+    }
+
+    /// Collapse whitespace/newlines and trim; return nil if empty.
+    static func cleanTitle(_ raw: String?) -> String? {
+        guard let raw else { return nil }
+        let collapsed = raw
+            .components(separatedBy: .whitespacesAndNewlines)
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+        return collapsed.isEmpty ? nil : collapsed
+    }
+
+    /// Heuristic: metadata titles that are really filenames or placeholders.
+    static func isLikelyFilename(_ s: String) -> Bool {
+        let lower = s.lowercased()
+        if lower.hasSuffix(".pdf") || lower.hasSuffix(".doc") || lower.hasSuffix(".docx") { return true }
+        if lower.hasPrefix("microsoft word -") { return true }
+        if lower == "untitled" { return true }
+        return false
     }
 
     // MARK: - Extraction

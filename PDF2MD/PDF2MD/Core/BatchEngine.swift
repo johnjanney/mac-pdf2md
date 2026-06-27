@@ -33,6 +33,7 @@ actor BatchEngine {
     func run(urls: [URL],
              converter: PDFConverter,
              writer: OutputWriter,
+             useTitleForName: Bool,
              progress: AsyncStream<ConversionProgress>.Continuation) -> [ConversionOutcome] {
         var outcomes: [ConversionOutcome] = []
         let total = urls.count
@@ -41,9 +42,12 @@ actor BatchEngine {
             progress.yield(ConversionProgress(completed: index,
                                               total: total,
                                               currentFileName: url.lastPathComponent))
-            let baseName = url.deletingPathExtension().lastPathComponent
             do {
                 let document = try converter.convert(pdfAt: url)
+                // Prefer the document's title when requested; otherwise (or if no
+                // title was detected) fall back to the source PDF's filename.
+                let titleName = useTitleForName ? document.title : nil
+                let baseName = titleName ?? url.deletingPathExtension().lastPathComponent
                 let outputURL = try writer.write(document, sourceName: baseName)
                 outcomes.append(ConversionOutcome(sourceName: url.lastPathComponent,
                                                   status: .success(outputURL: outputURL)))

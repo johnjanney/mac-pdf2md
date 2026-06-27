@@ -41,6 +41,11 @@ Rules of thumb:
 ## [Unreleased]
 
 ### Added
+- Output files can now be named after the **document's title** (embedded PDF
+  metadata title, else the first detected heading) instead of the PDF's
+  filename. Controlled by a new "Name files by the document's title" option
+  (on by default); falls back to the filename when no title is found. Titles
+  are sanitized and length-capped for safe filenames. Unit tests added.
 - Initial project documentation: `PROJECTBRIEF.md`, `README.md`,
   `INSTRUCTIONS.md`, `CHANGELOG.md`, and `OPENQUESTIONS.md`.
 - Defined scope, requirements, architecture, milestones, and the Semantic
@@ -60,6 +65,14 @@ Rules of thumb:
     (single files + folders, optional recursion).
   - App Sandbox entitlements scoped to user-selected files.
   - Unit tests for output naming, file scanning, and Markdown assembly.
+
+### Fixed
+- File pickers: "Choose PDFs" and "Choose Folder" did nothing because SwiftUI
+  only honors one `.fileImporter` per view. Collapsed the three importers into
+  a single mode-driven importer.
+- "Open Output Folder" / "Reveal" were blocked by the sandbox after a run;
+  the app now re-acquires security-scoped access before handing the location
+  to Finder.
 
 > _Pre-release (`0.x`): this is an early scaffolding build, not yet
 > feature-complete. App version set to `0.1.0`._

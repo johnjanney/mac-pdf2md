@@ -11,6 +11,9 @@ final class ConversionViewModel: ObservableObject {
     @Published var outputFolder: URL?
     @Published var includeSubfolders = false
     @Published var insertPageSeparators = false
+    /// Name each output `.md` after the document's title when one is detected
+    /// (falling back to the PDF's filename).
+    @Published var nameByTitle = true
 
     // Run state
     @Published private(set) var isConverting = false
@@ -74,6 +77,7 @@ final class ConversionViewModel: ObservableObject {
         let inputs = inputURLs
         let scanner = FileScanner(includeSubfolders: includeSubfolders)
         let converter = PDFKitConverter(insertPageSeparators: insertPageSeparators)
+        let useTitleForName = nameByTitle
 
         isConverting = true
         outcomes = []
@@ -109,6 +113,7 @@ final class ConversionViewModel: ObservableObject {
             let results = await engine.run(urls: pdfs,
                                            converter: converter,
                                            writer: writer,
+                                           useTitleForName: useTitleForName,
                                            progress: continuation)
             continuation.finish()
             await progressTask.value

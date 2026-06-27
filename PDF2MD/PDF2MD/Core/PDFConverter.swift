@@ -6,6 +6,9 @@ struct MarkdownDocument: Sendable {
     let markdown: String
     /// Number of pages read from the source PDF.
     let pageCount: Int
+    /// Best-effort document title (embedded metadata or first heading), if any.
+    /// Used to name the output file when the user opts in.
+    var title: String? = nil
 }
 
 /// Errors that can occur while converting or writing a PDF.
