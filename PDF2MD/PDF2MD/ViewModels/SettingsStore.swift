@@ -22,11 +22,13 @@ final class SettingsStore: ObservableObject {
     @Published var anthropicModel: String { didSet { defaults.set(anthropicModel, forKey: "model.anthropic") } }
     @Published var openAIModel: String { didSet { defaults.set(openAIModel, forKey: "model.openai") } }
     @Published var googleModel: String { didSet { defaults.set(googleModel, forKey: "model.google") } }
+    @Published var deepseekModel: String { didSet { defaults.set(deepseekModel, forKey: "model.deepseek") } }
 
     // API key drafts — loaded from Keychain at init, written back via persistKeys().
     @Published var anthropicKey: String
     @Published var openAIKey: String
     @Published var googleKey: String
+    @Published var deepseekKey: String
 
     private let defaults = UserDefaults.standard
 
@@ -37,27 +39,35 @@ final class SettingsStore: ObservableObject {
         anthropicModel = defaults.string(forKey: "model.anthropic") ?? LLMProvider.anthropic.defaultModel
         openAIModel = defaults.string(forKey: "model.openai") ?? LLMProvider.openai.defaultModel
         googleModel = defaults.string(forKey: "model.google") ?? LLMProvider.google.defaultModel
+        deepseekModel = defaults.string(forKey: "model.deepseek") ?? LLMProvider.deepseek.defaultModel
         anthropicKey = Keychain.get(LLMProvider.anthropic.keychainAccount) ?? ""
         openAIKey = Keychain.get(LLMProvider.openai.keychainAccount) ?? ""
         googleKey = Keychain.get(LLMProvider.google.keychainAccount) ?? ""
+        deepseekKey = Keychain.get(LLMProvider.deepseek.keychainAccount) ?? ""
     }
 
     // MARK: - Accessors
 
     func model(for provider: LLMProvider) -> String {
+        let raw: String
         switch provider {
-        case .anthropic: return anthropicModel.trimmingCharacters(in: .whitespacesAndNewlines)
-        case .openai: return openAIModel.trimmingCharacters(in: .whitespacesAndNewlines)
-        case .google: return googleModel.trimmingCharacters(in: .whitespacesAndNewlines)
+        case .anthropic: raw = anthropicModel
+        case .openai: raw = openAIModel
+        case .google: raw = googleModel
+        case .deepseek: raw = deepseekModel
         }
+        return raw.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     func key(for provider: LLMProvider) -> String {
+        let raw: String
         switch provider {
-        case .anthropic: return anthropicKey.trimmingCharacters(in: .whitespacesAndNewlines)
-        case .openai: return openAIKey.trimmingCharacters(in: .whitespacesAndNewlines)
-        case .google: return googleKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        case .anthropic: raw = anthropicKey
+        case .openai: raw = openAIKey
+        case .google: raw = googleKey
+        case .deepseek: raw = deepseekKey
         }
+        return raw.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     var selectedProviderHasKey: Bool { !key(for: provider).isEmpty }
@@ -69,6 +79,7 @@ final class SettingsStore: ObservableObject {
         save(anthropicKey, for: .anthropic)
         save(openAIKey, for: .openai)
         save(googleKey, for: .google)
+        save(deepseekKey, for: .deepseek)
     }
 
     private func save(_ key: String, for provider: LLMProvider) {

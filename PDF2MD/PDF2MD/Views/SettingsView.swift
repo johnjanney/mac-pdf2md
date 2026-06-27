@@ -25,6 +25,7 @@ struct SettingsView: View {
                 providerRow(.anthropic, key: $settings.anthropicKey, model: $settings.anthropicModel)
                 providerRow(.openai, key: $settings.openAIKey, model: $settings.openAIModel)
                 providerRow(.google, key: $settings.googleKey, model: $settings.googleModel)
+                providerRow(.deepseek, key: $settings.deepseekKey, model: $settings.deepseekModel)
 
                 HStack {
                     Spacer()
