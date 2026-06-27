@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 /// The Settings window: choose the conversion engine and manage API keys.
 struct SettingsView: View {
@@ -27,8 +28,12 @@ struct SettingsView: View {
 
                 HStack {
                     Spacer()
-                    Button("Save Keys") { settings.persistKeys() }
-                        .keyboardShortcut(.defaultAction)
+                    Button("Save Keys") {
+                        settings.persistKeys()
+                        // Close the Settings window after saving.
+                        NSApp.keyWindow?.performClose(nil)
+                    }
+                    .keyboardShortcut(.defaultAction)
                 }
             }
 
