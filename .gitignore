@@ -1,0 +1,28 @@
+# macOS
+.DS_Store
+
+# Xcode
+## User-specific
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+
+## Build artifacts
+build/
+DerivedData/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+## Swift Package Manager
+.build/
+.swiftpm/
+
+## Misc
+*.pbxuser
+!default.pbxuser
+*.perspectivev3
+!default.perspectivev3

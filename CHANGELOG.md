@@ -46,14 +46,23 @@ Rules of thumb:
 - Defined scope, requirements, architecture, milestones, and the Semantic
   Versioning policy for the project.
 - `LICENSE` — project licensed under the MIT License.
+- **Milestone M1 — app scaffolding & skeleton:**
+  - Xcode project (`PDF2MD/PDF2MD.xcodeproj`) using synchronized file groups,
+    plus an XcodeGen `project.yml` to regenerate it, and `BUILD.md`.
+  - SwiftUI app skeleton: single-window UI with PDF/folder selection, output
+    folder selection, options, progress, and a per-file results list.
+  - `PDFConverter` protocol with a first-party **PDFKit** implementation
+    (`PDFKitConverter`) that reconstructs headings, paragraphs, and lists via
+    font-size/marker heuristics (baseline; fidelity improves at M4).
+  - `BatchEngine` actor for off-main-thread batch conversion with streamed
+    progress; one failing file never aborts the batch.
+  - `OutputWriter` (numeric-suffix collision policy) and `FileScanner`
+    (single files + folders, optional recursion).
+  - App Sandbox entitlements scoped to user-selected files.
+  - Unit tests for output naming, file scanning, and Markdown assembly.
 
-### Changed
-- Resolved key design decisions: conversion engine is **Swift + PDFKit**
-  (first-party, no third-party engine license); output collisions use a
-  numeric-suffix default; project license is **MIT**. Remaining items in
-  `OPENQUESTIONS.md` now carry working defaults.
-
-> _No application code yet — the project is in the brief/planning phase._
+> _Pre-release (`0.x`): this is an early scaffolding build, not yet
+> feature-complete. App version set to `0.1.0`._
 
 ---
 

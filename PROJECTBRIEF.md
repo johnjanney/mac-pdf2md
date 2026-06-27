@@ -188,17 +188,23 @@ mac-pdf2md/
 ├── INSTRUCTIONS.md         # how to use the app
 ├── CHANGELOG.md            # log of changes + versioning policy
 ├── OPENQUESTIONS.md        # unresolved decisions
-├── LICENSE                 # to be added (see Open Questions)
+├── BUILD.md                # how to build/run from source
+├── LICENSE                 # MIT
 ├── .gitignore              # Xcode/Swift/macOS ignores
-└── PDF2MD/                 # Xcode project (created at implementation time)
+└── PDF2MD/                 # Xcode project
+    ├── project.yml         # XcodeGen spec (canonical project definition)
     ├── PDF2MD.xcodeproj
-    ├── PDF2MD/             # Swift sources (UI + Core as above)
-    ├── PDF2MDTests/        # unit tests (converter, naming, scanner)
-    └── Resources/
+    ├── PDF2MD/             # Swift sources
+    │   ├── App/            # @main entry, entitlements
+    │   ├── Core/           # PDFConverter, PDFKitConverter, BatchEngine, OutputWriter, FileScanner
+    │   ├── ViewModels/     # ConversionViewModel
+    │   ├── Views/          # ContentView, ResultsView
+    │   └── Assets.xcassets/
+    └── PDF2MDTests/        # unit tests (naming, scanning, Markdown assembly)
 ```
 
-> Only the documentation files are created in this brief stage. The Xcode
-> project and Swift sources are produced in the implementation phase.
+> **Status:** This layout now exists as of milestone M1. See
+> [`BUILD.md`](./BUILD.md) for how to open and run it.
 
 ### 7.1 Tooling and conventions
 
@@ -214,15 +220,28 @@ mac-pdf2md/
 
 ## 8. Milestones
 
-| Milestone | Description |
-|-----------|-------------|
-| M0 — Brief | This document + supporting docs (current step). |
-| M1 — Scaffolding | Xcode project, app skeleton, `PDFConverter` protocol, file pickers. |
-| M2 — Single-file | End-to-end single PDF → MD with output-folder selection. |
-| M3 — Batch | Multi-file/folder selection, background batch runner, progress + results. |
-| M4 — Fidelity | Improve headings/lists/tables; collision handling polish. |
-| M5 — Packaging | Build, sign/notarize (if applicable), produce distributable `.app`. |
-| v1.0 | All Must requirements met; documented and packaged. |
+| Milestone | Description | Status |
+|-----------|-------------|--------|
+| M0 — Brief | This document + supporting docs. | ✅ Done |
+| M1 — Scaffolding | Xcode project, app skeleton, `PDFConverter` protocol, file pickers. | ✅ Done |
+| M2 — Single-file | End-to-end single PDF → MD with output-folder selection. | ◑ Working baseline in place; needs on-device verification. |
+| M3 — Batch | Multi-file/folder selection, background batch runner, progress + results. | ◑ Implemented; needs on-device verification. |
+| M4 — Fidelity | Improve headings/lists/tables; collision handling polish. | ☐ Pending |
+| M5 — Packaging | Build, sign/notarize (if applicable), produce distributable `.app`. | ☐ Pending |
+| v1.0 | All Must requirements met; documented and packaged. | ☐ Pending |
+
+> Note: M1 delivered a functional vertical slice that already exercises the M2
+> (single-file) and M3 (batch) paths, since the UI, batching, and output layers
+> are engine-agnostic. They are marked partial because they have not yet been
+> built/run on a Mac — see "Verification" below.
+
+### 8.1 Verification status
+
+This scaffolding was authored in a Linux CI environment where Xcode is not
+available, so the project has **not yet been compiled or run on macOS**. Before
+relying on M2/M3, open the project per [`BUILD.md`](./BUILD.md), run the unit
+tests (⌘U), and do a manual single-file and batch conversion. Any build fixes
+should land as PATCH updates logged in [`CHANGELOG.md`](./CHANGELOG.md).
 
 ---
 
