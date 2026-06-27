@@ -57,6 +57,11 @@ Install it
 * First launch only: if macOS says it's from an unidentified developer, right-click the app → Open → Open. After that it opens normally by double-click.
 That's it — it's now a normal Mac app, no Xcode required to run it.
 
+## Screenshot
+
+<img width="2024" height="1368" alt="SCR-20260626-smdd" src="https://github.com/user-attachments/assets/1654ed89-3cd4-4f80-9295-be448339a005" />
+
+
 ## Usage
 
 See [`INSTRUCTIONS.md`](./INSTRUCTIONS.md) for how to use the app once it is
