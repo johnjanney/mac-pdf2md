@@ -122,6 +122,14 @@ struct LLMClient: Sendable {
                     "maxOutputTokens": maxTokens,
                     "thinkingConfig": ["thinkingBudget": 0],
                 ],
+                // Relax the configurable safety categories so ordinary documents
+                // aren't falsely blocked. (Note: RECITATION is not configurable.)
+                "safetySettings": [
+                    ["category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"],
+                    ["category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"],
+                    ["category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"],
+                    ["category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"],
+                ],
             ]
             req.httpBody = try JSONSerialization.data(withJSONObject: body)
             return req
@@ -185,9 +193,17 @@ struct LLMClient: Sendable {
             }
             if let candidates = json["candidates"] as? [[String: Any]],
                let reason = candidates.first?["finishReason"] as? String {
-                return reason == "MAX_TOKENS"
-                    ? "hit the output limit (try a smaller page or different model)"
-                    : "finish reason: \(reason)"
+                switch reason {
+                case "MAX_TOKENS":
+                    return "hit the output limit (try a smaller page or different model)"
+                case "RECITATION":
+                    return "Gemini blocked the output as possible recited text. "
+                        + "Gemini often blocks verbatim transcription — try the Anthropic or OpenAI provider."
+                case "SAFETY":
+                    return "blocked by Gemini's safety filter"
+                default:
+                    return "finish reason: \(reason)"
+                }
             }
         case .anthropic:
             if let reason = json["stop_reason"] as? String { return "stop reason: \(reason)" }

@@ -83,6 +83,10 @@ PDF2MD has two engines, selectable in the **Conversion engine** section:
   Markdown, **preserving headings, tables, and charts** much more faithfully.
 - Requires your own API key from one of: **Anthropic (Claude)**,
   **OpenAI (ChatGPT)**, or **Google (Gemini)**.
+- **Provider note:** for faithful transcription, **Anthropic (Claude)** tends to
+  give the best results. **Gemini** sometimes refuses verbatim transcription
+  with a `RECITATION` block (its copyright filter) — if you hit that, switch to
+  Claude or OpenAI.
 - ⚠️ **Privacy:** with the AI engine, each page image is sent to the provider
   you choose. Use the Local engine if documents must never leave your Mac.
 - Slower and incurs cost from your provider (billed by them, per their pricing).
