@@ -22,12 +22,44 @@ struct LLMClient: Sendable {
     - Output ONLY the Markdown for this page.
     """
 
+    /// Instruction used for the post-process (cleanup) mode.
+    static let cleanupPrompt = """
+    You are a Markdown cleanup assistant. You are given Markdown that was \
+    auto-extracted from a PDF and may contain artifacts: hard line breaks in \
+    the middle of sentences, broken or merged paragraphs, inconsistent \
+    headings, stray spaces, and mangled lists or tables.
+
+    Clean it into well-formed GitHub-Flavored Markdown:
+    - Join lines that belong to the same paragraph; keep real paragraph breaks.
+    - Fix heading levels, lists, and emphasis to match the document's intent.
+    - Repair tables into proper Markdown tables where possible.
+    - Preserve all content and wording exactly; do NOT summarize, add, or remove
+      information.
+    - Output ONLY the cleaned Markdown, with no commentary or surrounding code fence.
+    """
+
+    /// Pre-process: send a rendered page image and get its Markdown transcription.
     func convertImage(provider: LLMProvider,
                       model: String,
                       apiKey: String,
                       imageBase64: String) async throws -> String {
         let request = try makeRequest(provider: provider, model: model, apiKey: apiKey, imageBase64: imageBase64)
+        return try await send(request, provider: provider)
+    }
 
+    /// Post-process: send already-extracted Markdown and get a tidied version.
+    func cleanup(provider: LLMProvider,
+                 model: String,
+                 apiKey: String,
+                 markdown: String) async throws -> String {
+        let request = try makeTextRequest(provider: provider, model: model, apiKey: apiKey,
+                                          systemPrompt: Self.cleanupPrompt, userText: markdown)
+        return try await send(request, provider: provider)
+    }
+
+    // MARK: - Transport
+
+    private func send(_ request: URLRequest, provider: LLMProvider) async throws -> String {
         let data: Data
         let response: URLResponse
         do {
@@ -128,6 +160,73 @@ struct LLMClient: Sendable {
                 ],
                 // Relax the configurable safety categories so ordinary documents
                 // aren't falsely blocked. (Note: RECITATION is not configurable.)
+                "safetySettings": [
+                    ["category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"],
+                    ["category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"],
+                    ["category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"],
+                    ["category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"],
+                ],
+            ]
+            req.httpBody = try JSONSerialization.data(withJSONObject: body)
+            return req
+        }
+    }
+
+    /// Build a text-only chat request (used by the cleanup / post-process mode).
+    private func makeTextRequest(provider: LLMProvider,
+                                 model: String,
+                                 apiKey: String,
+                                 systemPrompt: String,
+                                 userText: String) throws -> URLRequest {
+        let maxTokens = 16000
+        switch provider {
+        case .anthropic:
+            var req = URLRequest(url: URL(string: "https://api.anthropic.com/v1/messages")!)
+            req.httpMethod = "POST"
+            req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            req.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+            req.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+            let body: [String: Any] = [
+                "model": model,
+                "max_tokens": maxTokens,
+                "system": systemPrompt,
+                "messages": [["role": "user", "content": userText]],
+            ]
+            req.httpBody = try JSONSerialization.data(withJSONObject: body)
+            return req
+
+        case .openai, .deepseek:
+            let endpoint = provider == .deepseek
+                ? "https://api.deepseek.com/v1/chat/completions"
+                : "https://api.openai.com/v1/chat/completions"
+            var req = URLRequest(url: URL(string: endpoint)!)
+            req.httpMethod = "POST"
+            req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            req.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+            let body: [String: Any] = [
+                "model": model,
+                "max_tokens": maxTokens,
+                "messages": [
+                    ["role": "system", "content": systemPrompt],
+                    ["role": "user", "content": userText],
+                ],
+            ]
+            req.httpBody = try JSONSerialization.data(withJSONObject: body)
+            return req
+
+        case .google:
+            let urlString = "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent"
+            var req = URLRequest(url: URL(string: urlString)!)
+            req.httpMethod = "POST"
+            req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            req.setValue(apiKey, forHTTPHeaderField: "x-goog-api-key")
+            let body: [String: Any] = [
+                "system_instruction": ["parts": [["text": systemPrompt]]],
+                "contents": [["parts": [["text": userText]]]],
+                "generationConfig": [
+                    "maxOutputTokens": maxTokens,
+                    "thinkingConfig": ["thinkingBudget": 0],
+                ],
                 "safetySettings": [
                     ["category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"],
                     ["category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"],

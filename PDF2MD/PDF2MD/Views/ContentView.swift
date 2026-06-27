@@ -80,10 +80,18 @@ struct ContentView: View {
         case .llm:
             let key = settings.key(for: settings.provider)
             guard !key.isEmpty else { return nil }
-            return LLMConverter(provider: settings.provider,
-                                model: settings.model(for: settings.provider),
-                                apiKey: key,
-                                insertPageSeparators: model.insertPageSeparators)
+            switch settings.aiMode {
+            case .vision:
+                return LLMConverter(provider: settings.provider,
+                                    model: settings.model(for: settings.provider),
+                                    apiKey: key,
+                                    insertPageSeparators: model.insertPageSeparators)
+            case .cleanup:
+                return LLMCleanupConverter(provider: settings.provider,
+                                           model: settings.model(for: settings.provider),
+                                           apiKey: key,
+                                           insertPageSeparators: model.insertPageSeparators)
+            }
         }
     }
 
@@ -164,7 +172,16 @@ struct ContentView: View {
                     }
                     .disabled(model.isConverting)
 
-                    if !settings.provider.supportsVision {
+                    Picker("Mode", selection: $settings.aiMode) {
+                        Text("AI reads the pages (best for tables & charts)")
+                            .tag(SettingsStore.AIMode.vision)
+                        Text("Local text, then AI cleanup (faster, cheaper)")
+                            .tag(SettingsStore.AIMode.cleanup)
+                    }
+                    .pickerStyle(.radioGroup)
+                    .disabled(model.isConverting)
+
+                    if settings.aiMode == .vision && !settings.provider.supportsVision {
                         Label("\(settings.provider.displayName)'s default model is text-only and "
                               + "can't read page images, so conversions will likely fail. Use Claude, "
                               + "OpenAI, or Gemini, or set a vision-capable model in Settings.",
@@ -174,8 +191,10 @@ struct ContentView: View {
                     }
 
                     if settings.selectedProviderHasKey {
-                        Text("Pages are sent to \(settings.provider.displayName) "
-                             + "(model: \(settings.model(for: settings.provider))).")
+                        Text((settings.aiMode == .vision
+                              ? "Page images are sent to \(settings.provider.displayName)"
+                              : "Extracted text is sent to \(settings.provider.displayName)")
+                             + " (model: \(settings.model(for: settings.provider))).")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     } else {

@@ -78,11 +78,20 @@ PDF2MD has two engines, selectable in the **Conversion engine** section:
 - Good for text-based PDFs with clear headings, lists, and simple tables.
 - Tables and complex layouts are best-effort.
 
-### AI — preserves formatting
-- Renders each page and sends it to an AI vision model that transcribes it to
-  Markdown, **preserving headings, tables, and charts** much more faithfully.
+### AI — preserves / cleans up formatting
+The AI engine has **two modes** (pick one under the engine):
+
+- **AI reads the pages (pre-process):** renders each page and sends the image to
+  a vision model that transcribes it to Markdown, **preserving headings, tables,
+  and charts** most faithfully. Needs a vision-capable model.
+- **Local text, then AI cleanup (post-process):** the Local engine extracts the
+  text first, then the AI tidies it — fixing run-on line breaks, broken
+  paragraphs, and mangled lists. **Faster and cheaper**, and works with
+  **text-only models** (e.g. DeepSeek) since no image is sent.
+
 - Requires your own API key from one of: **Anthropic (Claude)**,
-  **OpenAI (ChatGPT)**, or **Google (Gemini)**.
+  **OpenAI (ChatGPT)**, **Google (Gemini)**, or **DeepSeek**
+  (DeepSeek works in cleanup mode only — its models can't read images yet).
 - **Provider note:** for faithful transcription, **Anthropic (Claude)** tends to
   give the best results. **Gemini** sometimes refuses verbatim transcription
   with a `RECITATION` block (its copyright filter) — if you hit that, switch to

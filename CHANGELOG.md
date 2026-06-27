@@ -41,10 +41,16 @@ Rules of thumb:
 ## [Unreleased]
 
 ### Added
-- **AI (LLM) conversion engine** for high-fidelity Markdown that preserves
-  headings, tables, and charts. Each PDF page is rendered to an image and sent
-  to a vision model for transcription. Choose between the **Local** engine
-  (fast, offline, free) and the **AI** engine in the main window.
+- **AI (LLM) conversion engine** with two modes:
+  - **Pre-process (AI reads the pages):** each page is rendered to an image and
+    sent to a vision model — best fidelity for tables and charts.
+  - **Post-process (Local text, then AI cleanup):** the local engine extracts
+    text, then the AI tidies it (fixing run-on line breaks, broken paragraphs,
+    mangled lists/tables). Cheaper, faster, and works with **text-only models**
+    like DeepSeek. If the cleanup call fails, the locally extracted Markdown is
+    kept.
+  Choose between the **Local** engine (fast, offline, free) and the **AI**
+  engine (with a mode) in the main window.
   - Providers: **Anthropic (Claude)**, **OpenAI (ChatGPT)**,
     **Google (Gemini)**, and **DeepSeek**, selectable in a new **Settings**
     window. (DeepSeek's current models are text-only and can't read page

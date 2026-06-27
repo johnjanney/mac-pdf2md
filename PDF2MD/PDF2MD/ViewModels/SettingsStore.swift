@@ -11,8 +11,16 @@ import SwiftUI
 final class SettingsStore: ObservableObject {
     enum EngineKind: String { case local, llm }
 
+    /// How the AI engine processes a PDF.
+    /// - `vision`: AI reads the page images (pre-process).
+    /// - `cleanup`: local text extraction, then AI tidies it (post-process).
+    enum AIMode: String { case vision, cleanup }
+
     @Published var engine: EngineKind {
         didSet { defaults.set(engine.rawValue, forKey: "engine") }
+    }
+    @Published var aiMode: AIMode {
+        didSet { defaults.set(aiMode.rawValue, forKey: "aiMode") }
     }
     @Published var provider: LLMProvider {
         didSet { defaults.set(provider.rawValue, forKey: "provider") }
@@ -35,6 +43,7 @@ final class SettingsStore: ObservableObject {
     init() {
         defaults.register(defaults: [:])
         engine = EngineKind(rawValue: defaults.string(forKey: "engine") ?? "") ?? .local
+        aiMode = AIMode(rawValue: defaults.string(forKey: "aiMode") ?? "") ?? .vision
         provider = LLMProvider(rawValue: defaults.string(forKey: "provider") ?? "") ?? .anthropic
         anthropicModel = defaults.string(forKey: "model.anthropic") ?? LLMProvider.anthropic.defaultModel
         openAIModel = defaults.string(forKey: "model.openai") ?? LLMProvider.openai.defaultModel
