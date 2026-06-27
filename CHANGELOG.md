@@ -41,6 +41,20 @@ Rules of thumb:
 ## [Unreleased]
 
 ### Added
+- **AI (LLM) conversion engine** for high-fidelity Markdown that preserves
+  headings, tables, and charts. Each PDF page is rendered to an image and sent
+  to a vision model for transcription. Choose between the **Local** engine
+  (fast, offline, free) and the **AI** engine in the main window.
+  - Providers: **Anthropic (Claude)**, **OpenAI (ChatGPT)**, and
+    **Google (Gemini)**, selectable in a new **Settings** window.
+  - API keys are stored in the **macOS Keychain**; model IDs are editable per
+    provider so the app survives provider model changes.
+  - Requires a paid API key and network access; page images are sent to the
+    selected provider (clearly noted in the UI). The Local engine remains fully
+    offline.
+  - Adds the `com.apple.security.network.client` sandbox entitlement (used only
+    by the AI engine).
+
 - Output files can now be named after the **document's title** (the first
   on-page heading, falling back to the embedded PDF metadata title) instead of
   the PDF's filename. Controlled by a new "Name files by the document's title"

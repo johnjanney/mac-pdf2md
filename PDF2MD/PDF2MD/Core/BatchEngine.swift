@@ -43,7 +43,7 @@ actor BatchEngine {
                                               total: total,
                                               currentFileName: url.lastPathComponent))
             do {
-                let document = try converter.convert(pdfAt: url)
+                let document = try await converter.convert(pdfAt: url)
                 // Prefer the document's title when requested; otherwise (or if no
                 // title was detected) fall back to the source PDF's filename.
                 let titleName = useTitleForName ? document.title : nil

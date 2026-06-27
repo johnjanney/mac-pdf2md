@@ -69,6 +69,34 @@ stop the rest of the batch.
 
 ---
 
+## Choosing a conversion engine
+
+PDF2MD has two engines, selectable in the **Conversion engine** section:
+
+### Local (default)
+- Fast, **fully offline**, and free. Nothing leaves your Mac.
+- Good for text-based PDFs with clear headings, lists, and simple tables.
+- Tables and complex layouts are best-effort.
+
+### AI — preserves formatting
+- Renders each page and sends it to an AI vision model that transcribes it to
+  Markdown, **preserving headings, tables, and charts** much more faithfully.
+- Requires your own API key from one of: **Anthropic (Claude)**,
+  **OpenAI (ChatGPT)**, or **Google (Gemini)**.
+- ⚠️ **Privacy:** with the AI engine, each page image is sent to the provider
+  you choose. Use the Local engine if documents must never leave your Mac.
+- Slower and incurs cost from your provider (billed by them, per their pricing).
+
+### Setting up the AI engine
+1. Open **PDF2MD → Settings** (⌘,).
+2. Choose **AI** as the engine and pick your **Provider**.
+3. Paste your **API key** for that provider (get one from the "Get key" link).
+   You can optionally change the **Model** if you want a specific one.
+4. Click **Save Keys**. Keys are stored securely in your **macOS Keychain**.
+5. Back in the main window, pick **AI**, choose the provider, and **Convert**.
+
+---
+
 ## How output files are named
 
 - By default (the **"Name files by the document's title"** option), each `.md`

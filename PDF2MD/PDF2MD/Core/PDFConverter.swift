@@ -42,7 +42,10 @@ enum ConversionError: LocalizedError, Sendable {
 /// the UI, batching, or output layers. See PROJECTBRIEF.md section 6.
 protocol PDFConverter: Sendable {
     /// Convert the PDF at `url` into Markdown.
-    /// - Throws: `ConversionError` if the file can't be opened, is encrypted,
-    ///   or contains no extractable text.
-    func convert(pdfAt url: URL) throws -> MarkdownDocument
+    ///
+    /// `async` so engines that call out to a network service (the LLM engine)
+    /// fit the same interface as the local PDFKit engine.
+    /// - Throws: `ConversionError` (or an engine-specific `LocalizedError`) if
+    ///   the file can't be opened, is encrypted, or conversion fails.
+    func convert(pdfAt url: URL) async throws -> MarkdownDocument
 }

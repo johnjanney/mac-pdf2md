@@ -9,5 +9,9 @@
 	     read-write also covers reading, so no separate read-only key is needed. -->
 	<key>com.apple.security.files.user-selected.read-write</key>
 	<true/>
+	<!-- Outbound network access for the optional AI conversion engine.
+	     The local PDFKit engine makes no network calls. -->
+	<key>com.apple.security.network.client</key>
+	<true/>
 </dict>
 </plist>

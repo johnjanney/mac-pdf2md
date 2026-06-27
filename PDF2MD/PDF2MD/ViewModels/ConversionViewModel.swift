@@ -71,12 +71,13 @@ final class ConversionViewModel: ObservableObject {
 
     // MARK: - Conversion
 
-    func startConversion() {
+    /// Start a batch conversion using the supplied engine. The caller builds
+    /// the `converter` from the current settings (local PDFKit or LLM).
+    func startConversion(converter: PDFConverter) {
         guard let output = outputFolder, !inputURLs.isEmpty, !isConverting else { return }
 
         let inputs = inputURLs
         let scanner = FileScanner(includeSubfolders: includeSubfolders)
-        let converter = PDFKitConverter(insertPageSeparators: insertPageSeparators)
         let useTitleForName = nameByTitle
 
         isConverting = true

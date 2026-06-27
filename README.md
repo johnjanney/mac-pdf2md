@@ -22,7 +22,12 @@ hoping the document never leaves your control. PDF2MD does the conversion
 - 📁 **Choose your output folder** — you decide where the `.md` files go.
 - 🧱 **Structure-aware** — preserves headings, paragraphs, lists, and tables
   where detectable.
-- 🔒 **Offline & private** — no network calls, no telemetry.
+- 🤖 **Optional AI engine** — for the best fidelity (tables, charts, layout),
+  use a vision model from **Anthropic**, **OpenAI**, or **Google** with your own
+  API key. Off by default.
+- 🔒 **Offline & private by default** — the local engine makes no network calls
+  and no telemetry. (The opt-in AI engine sends page images to your chosen
+  provider — clearly flagged in the app.)
 - 🍎 **Native macOS** — built with SwiftUI for a clean Mac feel.
 
 ## Status & roadmap

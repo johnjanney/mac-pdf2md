@@ -13,7 +13,7 @@ struct PDFKitConverter: PDFConverter {
     /// When true, a `---` rule is inserted between pages.
     var insertPageSeparators: Bool = false
 
-    func convert(pdfAt url: URL) throws -> MarkdownDocument {
+    func convert(pdfAt url: URL) async throws -> MarkdownDocument {
         guard let document = PDFDocument(url: url) else {
             throw ConversionError.cannotOpenPDF(url)
         }

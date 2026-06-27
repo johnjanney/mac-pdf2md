@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 /// and review results.
 struct ContentView: View {
     @StateObject private var model = ConversionViewModel()
+    @EnvironmentObject private var settings: SettingsStore
 
     /// What the single file importer is currently selecting.
     private enum ImportMode {
@@ -33,6 +34,7 @@ struct ContentView: View {
             header
             inputSection
             outputSection
+            engineSection
             optionsSection
             actionBar
 
@@ -67,6 +69,30 @@ struct ContentView: View {
     private func present(_ mode: ImportMode) {
         importMode = mode
         showingImporter = true
+    }
+
+    /// Build the conversion engine from the current settings.
+    /// Returns nil if the AI engine is selected but its API key is missing.
+    private func makeConverter() -> PDFConverter? {
+        switch settings.engine {
+        case .local:
+            return PDFKitConverter(insertPageSeparators: model.insertPageSeparators)
+        case .llm:
+            let key = settings.key(for: settings.provider)
+            guard !key.isEmpty else { return nil }
+            return LLMConverter(provider: settings.provider,
+                                model: settings.model(for: settings.provider),
+                                apiKey: key,
+                                insertPageSeparators: model.insertPageSeparators)
+        }
+    }
+
+    private func startConversion() {
+        guard let converter = makeConverter() else {
+            model.statusMessage = "Add a \(settings.provider.displayName) API key in Settings to use the AI engine."
+            return
+        }
+        model.startConversion(converter: converter)
     }
 
     // MARK: - Sections
@@ -116,6 +142,46 @@ struct ContentView: View {
         }
     }
 
+    private var engineSection: some View {
+        GroupBox("Conversion engine") {
+            VStack(alignment: .leading, spacing: 8) {
+                Picker("Engine", selection: $settings.engine) {
+                    Text("Local — fast, offline, free").tag(SettingsStore.EngineKind.local)
+                    Text("AI — preserves formatting (tables, charts)").tag(SettingsStore.EngineKind.llm)
+                }
+                .pickerStyle(.radioGroup)
+                .disabled(model.isConverting)
+
+                if settings.engine == .llm {
+                    HStack(spacing: 8) {
+                        Text("Provider:").foregroundStyle(.secondary)
+                        Picker("Provider", selection: $settings.provider) {
+                            ForEach(LLMProvider.allCases) { Text($0.displayName).tag($0) }
+                        }
+                        .labelsHidden()
+                        .frame(maxWidth: 220)
+                        SettingsLink { Text("Settings…") }
+                    }
+                    .disabled(model.isConverting)
+
+                    if settings.selectedProviderHasKey {
+                        Text("Pages are sent to \(settings.provider.displayName) "
+                             + "(model: \(settings.model(for: settings.provider))).")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Label("No API key set for \(settings.provider.displayName). Add one in Settings.",
+                              systemImage: "exclamationmark.triangle.fill")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(6)
+        }
+    }
+
     private var optionsSection: some View {
         GroupBox("Options") {
             VStack(alignment: .leading, spacing: 6) {
@@ -132,7 +198,7 @@ struct ContentView: View {
     private var actionBar: some View {
         HStack {
             Button {
-                model.startConversion()
+                startConversion()
             } label: {
                 Label("Convert", systemImage: "doc.text")
                     .frame(minWidth: 120)
@@ -164,4 +230,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
+        .environmentObject(SettingsStore())
 }

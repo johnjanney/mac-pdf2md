@@ -38,7 +38,9 @@ undecided items live in [`OPENQUESTIONS.md`](./OPENQUESTIONS.md).
 3. Let the user pick the output folder before conversion.
 4. Preserve document structure as faithfully as practical: headings,
    paragraphs, lists, tables, and basic inline formatting (bold/italic).
-5. Run **fully offline** — no document data leaves the machine.
+5. Run **fully offline by default** (the local PDFKit engine) — no document
+   data leaves the machine. An **opt-in AI engine** trades this for higher
+   fidelity (see §6.5).
 6. Provide clear progress feedback and a per-file success/failure summary.
 7. Ship as a normal macOS `.app` the user can run from `/Applications`.
 
@@ -48,7 +50,9 @@ undecided items live in [`OPENQUESTIONS.md`](./OPENQUESTIONS.md).
 - OCR of scanned/image-only PDFs (tracked as a future enhancement — see
   [`OPENQUESTIONS.md`](./OPENQUESTIONS.md)).
 - Editing Markdown inside the app (it is a converter, not an editor).
-- Cloud sync, accounts, or any network features.
+- Cloud sync or accounts. (Note: the optional AI engine added in `0.x` makes
+  outbound API calls to a user-chosen provider — see §6.5 — but there is still
+  no PDF2MD-operated backend.)
 - Converting formats other than PDF → Markdown.
 - App Store distribution in v1.0 (revisit later).
 
@@ -175,6 +179,26 @@ PDF2MD.app
 - Stream progress updates back to the UI on the main actor.
 - Treat the converter as fallible per file; collect results, never crash a run.
 
+### 6.5 AI (LLM) engine — opt-in, high-fidelity (added in `0.x`)
+
+A second engine, `LLMConverter`, implements the same `PDFConverter` protocol
+but uses a **vision LLM** to preserve formatting the heuristic engine can't
+(tables, charts, complex layout):
+
+- **Approach:** each page is rasterized (`PageRenderer`) and sent as an image
+  to the selected provider with a transcribe-to-Markdown prompt; per-page
+  results are concatenated. Vision is required because the goal is to reproduce
+  the *visual* structure, which text extraction discards.
+- **Providers:** Anthropic (Claude), OpenAI (ChatGPT), Google (Gemini), via raw
+  HTTPS (`LLMClient`) — no third-party SDKs. Model IDs are user-editable.
+- **Keys:** stored in the macOS **Keychain** (`Keychain`), never in plaintext.
+- **Privacy trade-off:** this engine sends page images off-device to the chosen
+  provider. It is opt-in, clearly labeled in the UI, and the local engine
+  remains the default. Requires the `network.client` sandbox entitlement.
+- **Async:** `PDFConverter.convert` is `async`; the local engine simply doesn't
+  await anything, while the LLM engine awaits network calls. A failing page
+  fails that one file; the batch continues.
+
 ---
 
 ## 7. Project Scaffolding
@@ -196,7 +220,8 @@ mac-pdf2md/
     ├── PDF2MD.xcodeproj
     ├── PDF2MD/             # Swift sources
     │   ├── App/            # @main entry, entitlements
-    │   ├── Core/           # PDFConverter, PDFKitConverter, BatchEngine, OutputWriter, FileScanner
+    │   ├── Core/           # PDFConverter, PDFKitConverter, BatchEngine, OutputWriter, FileScanner, Keychain
+    │   │   └── LLM/        # PageRenderer, LLMProvider, LLMClient, LLMConverter (AI engine)
     │   ├── ViewModels/     # ConversionViewModel
     │   ├── Views/          # ContentView, ResultsView
     │   └── Assets.xcassets/
