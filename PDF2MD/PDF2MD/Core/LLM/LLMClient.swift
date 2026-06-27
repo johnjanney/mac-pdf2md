@@ -45,7 +45,8 @@ struct LLMClient: Sendable {
         }
         guard let markdown = Self.extractMarkdown(provider: provider, data: data),
               !markdown.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw LLMError.emptyResponse(provider.displayName)
+            let detail = Self.diagnostic(provider: provider, data: data)
+            throw LLMError.emptyResponse(provider.displayName + (detail.map { " — \($0)" } ?? ""))
         }
         return markdown
     }
@@ -56,7 +57,7 @@ struct LLMClient: Sendable {
                              model: String,
                              apiKey: String,
                              imageBase64: String) throws -> URLRequest {
-        let maxTokens = 8000
+        let maxTokens = 16000
         switch provider {
         case .anthropic:
             var req = URLRequest(url: URL(string: "https://api.anthropic.com/v1/messages")!)
@@ -113,7 +114,13 @@ struct LLMClient: Sendable {
                         ["inline_data": ["mime_type": "image/png", "data": imageBase64]],
                     ],
                 ]],
-                "generationConfig": ["maxOutputTokens": maxTokens],
+                // Disable "thinking" so the whole token budget goes to the
+                // transcription — Gemini 2.5 models otherwise can spend it all
+                // thinking and return no text.
+                "generationConfig": [
+                    "maxOutputTokens": maxTokens,
+                    "thinkingConfig": ["thinkingBudget": 0],
+                ],
             ]
             req.httpBody = try JSONSerialization.data(withJSONObject: body)
             return req
@@ -159,6 +166,35 @@ struct LLMClient: Sendable {
         }
         if let message = json["message"] as? String {
             return message
+        }
+        return nil
+    }
+
+    /// When a 200 response yields no text, surface why (finish reason, safety
+    /// block, etc.) so the failure is diagnosable rather than just "empty".
+    static func diagnostic(provider: LLMProvider, data: Data) -> String? {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return nil
+        }
+        switch provider {
+        case .google:
+            if let feedback = json["promptFeedback"] as? [String: Any],
+               let blockReason = feedback["blockReason"] as? String {
+                return "blocked: \(blockReason)"
+            }
+            if let candidates = json["candidates"] as? [[String: Any]],
+               let reason = candidates.first?["finishReason"] as? String {
+                return reason == "MAX_TOKENS"
+                    ? "hit the output limit (try a smaller page or different model)"
+                    : "finish reason: \(reason)"
+            }
+        case .anthropic:
+            if let reason = json["stop_reason"] as? String { return "stop reason: \(reason)" }
+        case .openai:
+            if let choices = json["choices"] as? [[String: Any]],
+               let reason = choices.first?["finish_reason"] as? String {
+                return "finish reason: \(reason)"
+            }
         }
         return nil
     }

@@ -22,7 +22,7 @@ enum LLMProvider: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .anthropic: return "claude-opus-4-8"
         case .openai: return "gpt-4o"
-        case .google: return "gemini-2.0-flash"
+        case .google: return "gemini-2.5-flash"
         }
     }
 
