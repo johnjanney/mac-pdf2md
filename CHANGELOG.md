@@ -40,6 +40,8 @@ Rules of thumb:
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-27
+
 ### Added
 - **AI (LLM) conversion engine** with two modes:
   - **Pre-process (AI reads the pages):** each page is rendered to an image and
@@ -99,8 +101,8 @@ Rules of thumb:
   the app now re-acquires security-scoped access before handing the location
   to Finder.
 
-> _Pre-release (`0.x`): this is an early scaffolding build, not yet
-> feature-complete. App version set to `0.1.0`._
+> _Pre-release (`0.x`): not yet feature-complete (`1.0.0`). App version
+> `0.2.0`._
 
 ---
 
